@@ -1,5 +1,4 @@
 import urllib, os, gzip, csv, re
-from collections import Counter
 
 gseDir = "./tmp/"
 outDir = "./output/"
@@ -27,6 +26,8 @@ def suppUrl(gsename):
   subUrl = gsename[:-3] + "nnn"
   return "https://ftp.ncbi.nlm.nih.gov/geo/series/{0}/{1}/suppl/".format(subUrl, gsename)
 
+https://ftp.ncbi.nlm.nih.gov/geo/series/GSE74nnn/GSE74432/suppl/
+
 def suppFilelist(gsename):
   return suppUrl(gsename) + "filelist.txt"
 
@@ -36,6 +37,7 @@ def downloadMatrix(gsename):
   downloadPath = gseDir + gsename + "/"
   if not os.path.exists(downloadPath):
     os.makedirs(downloadPath)
+  print "Downloading RAW file:", filepath
   urllib.urlretrieve(matrixUrl(gsename), downloadPath + gzMatrixName(gsename))
 
 def hasIDAT(*gsenames):
@@ -48,8 +50,7 @@ def hasIDAT(*gsenames):
     if not os.path.isfile(filepath):
       url = suppFilelist(gsename)
       urllib.urlretrieve(url, filepath)
-    res.append(True if 'IDAT' in open(filepath).read() else False)
-    # res.append(gsename if 'IDAT' in open(filepath).read() else None)
+    res.append(gsename if 'IDAT' in open(filepath).read() else False)
   return res[0] if len(res) == 1 else res
 
 def downloadRAW(gsename):
@@ -59,6 +60,7 @@ def downloadRAW(gsename):
       os.makedirs(downloadPath)
     url = suppUrl(gsename) + rawName(gsename)
     filepath = downloadPath + rawName(gsename)
+    print "Downloading RAW file:", filepath
     urllib.urlretrieve(url, filepath)
 
 def isValidGZ(fname):
@@ -193,8 +195,11 @@ def parseMatrix(gsenames):
   headers = mergeDics(*headers)
   sampleHeaders = mergeDics(*sampleHeaders)
 
+  print "Writing Series Headers ..."
   writeCSV(outDir + "headers.csv", headers)
+  print "Sample Headers ..."
   writeCSV(outDir + "sampleHeaders.csv", headers)
+  print "Sample Tables ..."
   writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
 
 
@@ -203,7 +208,7 @@ import time
 
 
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
 # gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
 # gsenames = ["GSE64380", "GSE68747"]
@@ -211,16 +216,17 @@ import time
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-gsenames = ["GSE74432"]
+# gsenames = ["GSE74432"]
 
 
 start = time.time()
 
-parseMatrix(gsenames)
+# parseMatrix(gsenames)
 
-# print hasIDAT(*gsenames)
-# print Counter(hasIDAT(*gsenames))
+print hasIDAT(*gsenames)
 # map(downloadRAW, gsenames)
+
+
 
 end = time.time()
 print(end - start)
