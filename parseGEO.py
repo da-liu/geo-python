@@ -178,9 +178,31 @@ def mergeDics(*dics):
   return dic
 
 
+def parseMatrix(gsenames):
+  headers = []
+  sampleHeaders = []
+  sampleTables = []
+  for i in xrange(len(gsenames)):
+    if not os.path.isfile(gzMatrixPath(gsenames[i])):
+      downloadMatrix(gsenames[i])
+    if isValidGZ(gzMatrixPath(gsenames[i])):
+      a, b, c = readCSVgz(gzMatrixPath(gsenames[i]))
+      headers.append(a)
+      sampleHeaders.append(b)
+      sampleTables.append(c)
+  headers = mergeDics(*headers)
+  sampleHeaders = mergeDics(*sampleHeaders)
+
+  writeCSV(outDir + "headers.csv", headers)
+  writeCSV(outDir + "sampleHeaders.csv", headers)
+  writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
+
+
+
 import time
 
-gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+
+# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
 # gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
@@ -189,36 +211,20 @@ gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","G
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-# gsenames = ["GSE74432"]
+gsenames = ["GSE74432"]
 
 
 start = time.time()
 
-print hasIDAT(*gsenames)
+parseMatrix(gsenames)
+
+# print hasIDAT(*gsenames)
 # print Counter(hasIDAT(*gsenames))
 # map(downloadRAW, gsenames)
-
-# headers = []
-# sampleHeaders = []
-# sampleTables = []
-# for i in xrange(len(gsenames)):
-#   if not os.path.isfile(gzMatrixPath(gsenames[i])):
-#     downloadMatrix(gsenames[i])
-#   if isValidGZ(gzMatrixPath(gsenames[i])):
-#     a, b, c = readCSVgz(gzMatrixPath(gsenames[i]))
-#     headers.append(a)
-#     sampleHeaders.append(b)
-#     sampleTables.append(c)
 
 end = time.time()
 print(end - start)
 
 
-# headers = mergeDics(*headers)
-# sampleHeaders = mergeDics(*sampleHeaders)
 
-# writeCSV(outDir + "headers.csv", headers)
-# writeCSV(outDir + "sampleHeaders.csv", headers)
-
-# writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
 
