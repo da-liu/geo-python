@@ -1,4 +1,5 @@
-import urllib, os, gzip, csv
+import urllib, os, gzip, csv, re
+from collections import Counter
 
 gseDir = "./tmp/"
 outDir = "./output/"
@@ -9,23 +10,56 @@ def gzMatrixName(gsename):
 def txtMatrixName(gsename):
   return gsename + "_series_matrix.txt"
 
+def rawName(gsename):
+  return gsename + "_RAW.tar"
+
 def gzMatrixPath(gsename):
   return gseDir + gsename + "/" + gzMatrixName(gsename)
 
 def txtMatrixPath(gsename):
   return gseDir + gsename + "/" + txtMatrixName(gsename)
 
-def downloadUrl(gsename):
+def matrixUrl(gsename):
   subUrl = gsename[:-3] + "nnn"
   return "https://ftp.ncbi.nlm.nih.gov/geo/series/" + subUrl + "/" + gsename + "/matrix/" + gzMatrixName(gsename)
+
+def suppUrl(gsename):
+  subUrl = gsename[:-3] + "nnn"
+  return "https://ftp.ncbi.nlm.nih.gov/geo/series/{0}/{1}/suppl/".format(subUrl, gsename)
+
+def suppFilelist(gsename):
+  return suppUrl(gsename) + "filelist.txt"
 
 orderedKeys = ["title","geo_accession","status","submission_date","last_update_date","pubmed_id","summary","overall_design","type","contributor","sample_id","contact_name","contact_email","contact_web_link","contact_phone","contact_fax","contact_laboratory","contact_department","contact_institute","contact_address","contact_city","contact_state","contact_zip/postal_code","contact_country","web_link","supplementary_file","platform_id","platform_taxid","sample_taxid","relation"]
 
 def downloadMatrix(gsename):
-  downloadPath = "../" + gsename + "/"
+  downloadPath = gseDir + gsename + "/"
   if not os.path.exists(downloadPath):
     os.makedirs(downloadPath)
-  urllib.urlretrieve(downloadUrl(gsename), downloadPath + gzMatrixName(gsename))
+  urllib.urlretrieve(matrixUrl(gsename), downloadPath + gzMatrixName(gsename))
+
+def hasIDAT(*gsenames):
+  res = []
+  for gsename in gsenames:
+    downloadPath = gseDir + gsename + "/suppl/"
+    if not os.path.exists(downloadPath):
+      os.makedirs(downloadPath)
+    filepath = downloadPath + "filelist.txt"
+    if not os.path.isfile(filepath):
+      url = suppFilelist(gsename)
+      urllib.urlretrieve(url, filepath)
+    res.append(True if 'IDAT' in open(filepath).read() else False)
+    # res.append(gsename if 'IDAT' in open(filepath).read() else None)
+  return res[0] if len(res) == 1 else res
+
+def downloadRAW(gsename):
+  if hasIDAT(gsename):
+    downloadPath = gseDir + gsename + "/suppl/"
+    if not os.path.exists(downloadPath):
+      os.makedirs(downloadPath)
+    url = suppUrl(gsename) + rawName(gsename)
+    filepath = downloadPath + rawName(gsename)
+    urllib.urlretrieve(url, filepath)
 
 def isValidGZ(fname):
   with gzip.open(fname) as f:
@@ -146,39 +180,45 @@ def mergeDics(*dics):
 
 import time
 
-# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+# gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
 # gsenames = ["GSE64380", "GSE68747"]
 # gsenames = ["GSE57361"] # two GPLs, faulty matrix
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-gsenames = ["GSE74432"]
-
+# gsenames = ["GSE74432"]
 
 
 start = time.time()
-headers = []
-sampleHeaders = []
-sampleTables = []
-for i in xrange(len(gsenames)):
-  if not os.path.isfile(gzMatrixPath(gsenames[i])):
-    downloadMatrix(gsenames[i])
-  if isValidGZ(gzMatrixPath(gsenames[i])):
-    a, b, c = readCSVgz(gzMatrixPath(gsenames[i]))
-    headers.append(a)
-    sampleHeaders.append(b)
-    sampleTables.append(c)
+
+print hasIDAT(*gsenames)
+# print Counter(hasIDAT(*gsenames))
+# map(downloadRAW, gsenames)
+
+# headers = []
+# sampleHeaders = []
+# sampleTables = []
+# for i in xrange(len(gsenames)):
+#   if not os.path.isfile(gzMatrixPath(gsenames[i])):
+#     downloadMatrix(gsenames[i])
+#   if isValidGZ(gzMatrixPath(gsenames[i])):
+#     a, b, c = readCSVgz(gzMatrixPath(gsenames[i]))
+#     headers.append(a)
+#     sampleHeaders.append(b)
+#     sampleTables.append(c)
+
 end = time.time()
 print(end - start)
 
 
-headers = mergeDics(*headers)
-sampleHeaders = mergeDics(*sampleHeaders)
+# headers = mergeDics(*headers)
+# sampleHeaders = mergeDics(*sampleHeaders)
 
-writeCSV(outDir + "headers.csv", headers)
-writeCSV(outDir + "sampleHeaders.csv", headers)
+# writeCSV(outDir + "headers.csv", headers)
+# writeCSV(outDir + "sampleHeaders.csv", headers)
 
-writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
+# writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
 
