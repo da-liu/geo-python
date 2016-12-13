@@ -82,8 +82,23 @@ def concatDicValues(key, val, dic):
     dic[key] = val
 
 def appendDicValues(key, val, dic):
+  # consider cases of duplicate keys
+  # k = "ftp", v = ['link1', 'link2', ...]
+  # k = "ftp", v = ['link1', 'link2', ...]
+  # k = "ftp", v = ['link1', 'link2', ...]
+  # ...
+  # We want to convert them to 
+  # k = "ftp", v = ['link1', 'link2', ...]
+  # k = "ftp1", v = ['link1', 'link2', ...]
+  # k = "ftp2", v = ['link1', 'link2', ...]
+  # ...
   if key in dic:
-    dic[key].append(val)
+    index = 1
+    newKey = key + str(index)
+    while newKey in dic:
+      index += 1
+      newKey = key + str(index)
+    dic[newKey] = val
   else:
     dic[key] = val
 
@@ -201,6 +216,9 @@ def parseMatrix(gsenames):
   writeCSV(outDir + "sampleHeaders.csv", headers)
   print "Sample Tables ..."
   writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
+  # print "Attributes ..."
+  # writeAttributes(outDir + "attributes.csv", *sampleTables)
+
 
 
 
@@ -216,16 +234,15 @@ gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list w
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-# gsenames = ["GSE74432"]
+gsenames = ["GSE74432"]
 
 
 start = time.time()
 
-# parseMatrix(gsenames)
+parseMatrix(gsenames)
 
-print hasIDAT(*gsenames)
+# print hasIDAT(*gsenames)
 # map(downloadRAW, gsenames)
-
 
 
 end = time.time()
