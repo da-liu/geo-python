@@ -26,8 +26,6 @@ def suppUrl(gsename):
   subUrl = gsename[:-3] + "nnn"
   return "https://ftp.ncbi.nlm.nih.gov/geo/series/{0}/{1}/suppl/".format(subUrl, gsename)
 
-https://ftp.ncbi.nlm.nih.gov/geo/series/GSE74nnn/GSE74432/suppl/
-
 def suppFilelist(gsename):
   return suppUrl(gsename) + "filelist.txt"
 
@@ -50,7 +48,9 @@ def hasIDAT(*gsenames):
     if not os.path.isfile(filepath):
       url = suppFilelist(gsename)
       urllib.urlretrieve(url, filepath)
-    res.append(gsename if 'IDAT' in open(filepath).read() else False)
+    # idat files exist if the '.idat' extension can be found in filelist.txt
+    # Alternatively 'IDAT', 'Grn.idat', 'Red.idat' are also markers for idat
+    res.append(gsename if '.idat' in open(filepath).read() else False)
   return res[0] if len(res) == 1 else res
 
 def downloadRAW(gsename):
@@ -208,8 +208,8 @@ import time
 
 
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-# gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
+# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
 # gsenames = ["GSE64380", "GSE68747"]
 # gsenames = ["GSE57361"] # two GPLs, faulty matrix
