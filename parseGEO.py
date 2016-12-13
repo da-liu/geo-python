@@ -167,6 +167,13 @@ def writeCSV(fname, dic):
           row.append(key)
           row.extend(dic[key])
           writer.writerow(row)
+      sortedKeys = sorted(allKeys(dic) - set(orderedKeys))
+      for key in sortedKeys:
+        row = []
+        row.append(key)
+        row.extend(dic[key])
+        writer.writerow(row)
+
 
 def writeSampleTables(fname, *sampleTables):
   with open(fname, 'wb') as f:
@@ -180,6 +187,19 @@ def writeSampleTables(fname, *sampleTables):
         w.writerow(row)
       w.writerow("")
       w.writerow("")
+
+def cleanAttributes(fname, *sampleTables):
+  listOfDics = []
+  for i, table in enumerate(sampleTables):
+    dic = {}
+    for k, v in table.iteritems():
+      if len(set(v)) == len(v):
+        v = '"' + v[0] + '", ...'
+      else:
+        v = "; ".join(set(v))
+      dic[k] = v
+    listOfDics.append(dic)
+  return listOfDics
 
 def mergeDics(*dics):
   keys = allKeys(*dics)
@@ -212,12 +232,17 @@ def parseMatrix(gsenames):
 
   print "Writing Series Headers ..."
   writeCSV(outDir + "headers.csv", headers)
+  
   print "Sample Headers ..."
   writeCSV(outDir + "sampleHeaders.csv", headers)
+  
   print "Sample Tables ..."
   writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
-  # print "Attributes ..."
-  # writeAttributes(outDir + "attributes.csv", *sampleTables)
+
+  print "Attributes ..."
+  attrTables = cleanAttributes(outDir + "attributes.csv", *sampleTables)
+  attrTables = mergeDics(*attrTables)
+  writeCSV(outDir + "attrTables.csv", attrTables)
 
 
 
@@ -226,15 +251,15 @@ import time
 
 
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
+gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+# gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
 # gsenames = ["GSE64380", "GSE68747"]
 # gsenames = ["GSE57361"] # two GPLs, faulty matrix
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-gsenames = ["GSE74432"]
+# gsenames = ["GSE74432"]
 
 
 start = time.time()
