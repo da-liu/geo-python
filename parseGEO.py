@@ -12,19 +12,24 @@ def txtMatrixName(gsename):
 def rawName(gsename):
   return gsename + "_RAW.tar"
 
-def gzMatrixPath(gsename):
+def gzMatrixPath1(gsename):
   return gseDir + gsename + "/" + gzMatrixName(gsename)
 
 def txtMatrixPath(gsename):
   return gseDir + gsename + "/" + txtMatrixName(gsename)
 
+def subUrl(gsename):
+  '''
+  Convert "GSE74432" => "GSE74nnn"
+  Convert "GSE13" => "GSEnnn"
+  '''
+  return gsename[:3] + "nnn" if len(gsename[3:]) <= 3 else gsename[:-3] + "nnn"
+
 def matrixUrl(gsename):
-  subUrl = gsename[:-3] + "nnn"
-  return "https://ftp.ncbi.nlm.nih.gov/geo/series/" + subUrl + "/" + gsename + "/matrix/" + gzMatrixName(gsename)
+  return "https://ftp.ncbi.nlm.nih.gov/geo/series/" + subUrl(gsename) + "/" + gsename + "/matrix/" + gzMatrixName(gsename)
 
 def suppUrl(gsename):
-  subUrl = gsename[:-3] + "nnn"
-  return "https://ftp.ncbi.nlm.nih.gov/geo/series/{0}/{1}/suppl/".format(subUrl, gsename)
+  return "https://ftp.ncbi.nlm.nih.gov/geo/series/{0}/{1}/suppl/".format(subUrl(gsename), gsename)
 
 def suppFilelist(gsename):
   return suppUrl(gsename) + "filelist.txt"
@@ -251,7 +256,7 @@ import time
 
 
 # gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE57361","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
-gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
+# gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","GSE72120","GSE69270","GSE51921","GSE61431","GSE59685","GSE50586","GSE61107","GSE53191","GSE52588","GSE63347","GSE74193","GSE41169"]
 # gsenames = ['GSE74432', 'GSE75248', 'GSE72120', 'GSE61107', 'GSE74193'] # list with IDAT
 # gsenames = ["GSE64380", "GSE68747", "GSE74486"]
 # gsenames = ["GSE64380", "GSE68747"]
@@ -259,12 +264,12 @@ gsenames = ["GSE74432","GSE74486","GSE64380","GSE41273","GSE75248","GSE68747","G
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-# gsenames = ["GSE74432"]
+gsenames = ["GSE74432"]
 
 
 start = time.time()
 
-parseMatrix(gsenames)
+# parseMatrix(gsenames)
 
 # print hasIDAT(*gsenames)
 # map(downloadRAW, gsenames)
