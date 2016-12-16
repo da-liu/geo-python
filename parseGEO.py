@@ -12,7 +12,7 @@ def txtMatrixName(gsename):
 def rawName(gsename):
   return gsename + "_RAW.tar"
 
-def gzMatrixPath1(gsename):
+def gzMatrixPath(gsename):
   return gseDir + gsename + "/" + gzMatrixName(gsename)
 
 def txtMatrixPath(gsename):
@@ -40,8 +40,10 @@ def downloadMatrix(gsename):
   downloadPath = gseDir + gsename + "/"
   if not os.path.exists(downloadPath):
     os.makedirs(downloadPath)
-  print "Downloading RAW file:", filepath
-  urllib.urlretrieve(matrixUrl(gsename), downloadPath + gzMatrixName(gsename))
+  filepath = downloadPath + gzMatrixName(gsename)
+  if not os.path.isfile(gzMatrixPath(gsename)) or not isValidGZ(gzMatrixPath(gsename)):
+    print "Downloading matrix file:", filepath
+    urllib.urlretrieve(matrixUrl(gsename), filepath)
 
 def hasIDAT(*gsenames):
   res = []
@@ -114,19 +116,22 @@ def parseHeader(l, header):
 
 def parseSampleTable(l, sampleTable):
   key = getKey(l)
-  if l[1].find(":") != -1:
-    rk = l[1][:l[1].find(":")]
-    rkIsCommon = True
-    for e in l[1:]:
-      if not e.startswith(rk):
-        rkIsCommon = False
-    if rkIsCommon:
-      key = rk
-      val = [x[l[1].find(":")+2:] for x in l[1:]]
+  if len(l) > 1:
+    if l[1].find(":") != -1:
+      rk = l[1][:l[1].find(":")]
+      rkIsCommon = True
+      for e in l[1:]:
+        if not e.startswith(rk):
+          rkIsCommon = False
+      if rkIsCommon:
+        key = rk
+        val = [x[l[1].find(":")+2:] for x in l[1:]]
+      else:
+        val = l[1:]
     else:
       val = l[1:]
   else:
-    val = l[1:]
+    val = ""
   appendDicValues(key, val, sampleTable)
 
 def parseGEO(f):
@@ -199,7 +204,10 @@ def cleanAttributes(fname, *sampleTables):
     dic = {}
     for k, v in table.iteritems():
       if len(set(v)) == len(v):
-        v = '"' + v[0] + '", ...'
+        if v == "":
+          v = '...'
+        else:
+          v = '"' + v[0] + '", ...'
       else:
         v = "; ".join(set(v))
       dic[k] = v
@@ -218,6 +226,8 @@ def mergeDics(*dics):
       else:
         dic[k].append("")
   return dic
+
+
 
 
 def parseMatrix(gsenames):
@@ -250,6 +260,10 @@ def parseMatrix(gsenames):
   writeCSV(outDir + "attrTables.csv", attrTables)
 
 
+def openGSEList(fname):
+  return [line.translate(None, '\n"') for line in open(fname)]
+
+
 
 
 import time
@@ -264,12 +278,16 @@ import time
 # gsenames = ["GSE57361","GSE59685"] # two GPLs
 
 # gsenames = ["GSE59685"]
-gsenames = ["GSE74432"]
+# gsenames = ["GSE74432"]
+
+gsenames = openGSEList("random100.txt")
 
 
+# gsenames = gsenames[13:14]
 start = time.time()
 
-# parseMatrix(gsenames)
+
+parseMatrix(gsenames)
 
 # print hasIDAT(*gsenames)
 # map(downloadRAW, gsenames)
