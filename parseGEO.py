@@ -1,7 +1,8 @@
 import urllib, os, gzip, csv, re
 
-gseDir = "./tmp/"
-outDir = "./output/"
+DOWNLOAD_DIR = "./tmp/"
+OUTPUT_DIR   = "./output/"
+ORDERED_KEYS = ["title","geo_accession","status","submission_date","last_update_date","pubmed_id","summary","overall_design","type","contributor","sample_id","contact_name","contact_email","contact_web_link","contact_phone","contact_fax","contact_laboratory","contact_department","contact_institute","contact_address","contact_city","contact_state","contact_zip/postal_code","contact_country","web_link","supplementary_file","platform_id","platform_taxid","sample_taxid","relation"]
 
 def gzMatrixName(gsename):
   return gsename + "_series_matrix.txt.gz"
@@ -13,10 +14,10 @@ def rawName(gsename):
   return gsename + "_RAW.tar"
 
 def gzMatrixPath(gsename):
-  return gseDir + gsename + "/" + gzMatrixName(gsename)
+  return DOWNLOAD_DIR + gsename + "/" + gzMatrixName(gsename)
 
 def txtMatrixPath(gsename):
-  return gseDir + gsename + "/" + txtMatrixName(gsename)
+  return DOWNLOAD_DIR + gsename + "/" + txtMatrixName(gsename)
 
 def subUrl(gsename):
   '''
@@ -34,10 +35,8 @@ def suppUrl(gsename):
 def suppFilelist(gsename):
   return suppUrl(gsename) + "filelist.txt"
 
-orderedKeys = ["title","geo_accession","status","submission_date","last_update_date","pubmed_id","summary","overall_design","type","contributor","sample_id","contact_name","contact_email","contact_web_link","contact_phone","contact_fax","contact_laboratory","contact_department","contact_institute","contact_address","contact_city","contact_state","contact_zip/postal_code","contact_country","web_link","supplementary_file","platform_id","platform_taxid","sample_taxid","relation"]
-
 def downloadMatrix(gsename):
-  downloadPath = gseDir + gsename + "/"
+  downloadPath = DOWNLOAD_DIR + gsename + "/"
   if not os.path.exists(downloadPath):
     os.makedirs(downloadPath)
   filepath = downloadPath + gzMatrixName(gsename)
@@ -48,7 +47,7 @@ def downloadMatrix(gsename):
 def hasIDAT(*gsenames):
   res = []
   for gsename in gsenames:
-    downloadPath = gseDir + gsename + "/suppl/"
+    downloadPath = DOWNLOAD_DIR + gsename + "/suppl/"
     if not os.path.exists(downloadPath):
       os.makedirs(downloadPath)
     filepath = downloadPath + "filelist.txt"
@@ -62,7 +61,7 @@ def hasIDAT(*gsenames):
 
 def downloadRAW(gsename):
   if hasIDAT(gsename):
-    downloadPath = gseDir + gsename + "/suppl/"
+    downloadPath = DOWNLOAD_DIR + gsename + "/suppl/"
     if not os.path.exists(downloadPath):
       os.makedirs(downloadPath)
     url = suppUrl(gsename) + rawName(gsename)
@@ -170,14 +169,14 @@ def allKeys(*dics):
 def writeCSV(fname, dic):
   with open(fname, 'wb') as csv_file:
       writer = csv.writer(csv_file)
-      # print allKeys(dic) - set(orderedKeys)
-      for key in orderedKeys:
+      # print allKeys(dic) - set(ORDERED_KEYS)
+      for key in ORDERED_KEYS:
         if key in dic: 
           row = []
           row.append(key)
           row.extend(dic[key])
           writer.writerow(row)
-      sortedKeys = sorted(allKeys(dic) - set(orderedKeys))
+      sortedKeys = sorted(allKeys(dic) - set(ORDERED_KEYS))
       for key in sortedKeys:
         row = []
         row.append(key)
@@ -246,18 +245,18 @@ def parseMatrix(gsenames):
   sampleHeaders = mergeDics(*sampleHeaders)
 
   print "Writing Series Headers ..."
-  writeCSV(outDir + "headers.csv", headers)
+  writeCSV(OUTPUT_DIR + "headers.csv", headers)
   
   print "Sample Headers ..."
-  writeCSV(outDir + "sampleHeaders.csv", headers)
+  writeCSV(OUTPUT_DIR + "sampleHeaders.csv", headers)
   
   print "Sample Tables ..."
-  writeSampleTables(outDir + "sampleTables.csv", *sampleTables)
+  writeSampleTables(OUTPUT_DIR + "sampleTables.csv", *sampleTables)
 
   print "Attributes ..."
-  attrTables = cleanAttributes(outDir + "attributes.csv", *sampleTables)
+  attrTables = cleanAttributes(OUTPUT_DIR + "attributes.csv", *sampleTables)
   attrTables = mergeDics(*attrTables)
-  writeCSV(outDir + "attrTables.csv", attrTables)
+  writeCSV(OUTPUT_DIR + "attrTables.csv", attrTables)
 
 
 def openGSEList(fname):
